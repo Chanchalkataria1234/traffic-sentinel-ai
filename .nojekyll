@@ -1,0 +1,2 @@
+# This file tells GitHub Pages to bypass Jekyll processing and serve files directly.
+# This prevents build crashes on Python notebooks, CSV files, or large model weights.
