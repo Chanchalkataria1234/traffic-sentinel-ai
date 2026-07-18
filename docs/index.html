@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrafficSentinel AI - Urban Traffic Analytics Suite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- ONNX Runtime Web CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/ort.min.js"></script>
+    <!-- Application Logic -->
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <div class="mesh-bg"></div>
+    
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-container">
+                <svg class="logo-icon" viewBox="0 0 24 24" width="32" height="32">
+                    <path fill="currentColor" d="M18.92 11.01C18.72 10.42 18.16 10 17.5 10H6.5c-.66 0-1.22.42-1.42 1.01L4 14v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h10v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-1.08-2.99zM6.85 12h10.3l.72 2H6.13l.72-2zM6.5 19c-.83 0-1.5-.67-1.5-1.5S5.67 16 6.5 16s1.5.67 1.5 1.5S7.33 19 6.5 19zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 8h14V6H5v2zm2-5h10V1H7v2z"/>
+                </svg>
+                <div class="logo-text">
+                    <h1>TrafficSentinel AI</h1>
+                    <p>Intelligent Urban Traffic Analytics & Detection Suite</p>
+                </div>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot" id="status-dot"></div>
+                <span id="status-text">System Idle</span>
+            </div>
+        </header>
+
+        <div class="app-layout">
+            <!-- Sidebar (Control Panel) -->
+            <aside class="sidebar card">
+                <!-- Model info status card -->
+                <div class="sidebar-section">
+                    <h2 class="section-title">
+                        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                        Detector Status
+                    </h2>
+                    <div class="stats-card" style="padding: 12px; min-width: unset; text-align: left; background: rgba(2, 6, 23, 0.2); border-radius: var(--radius-sm)">
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Active Model:</div>
+                        <div style="font-weight: 600; font-size: 0.95rem; color: var(--primary);">Indian Vehicles Model</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px;">Classes detected: 21 categories</div>
+                    </div>
+                </div>
+
+
+                <div class="sidebar-section">
+                    <h2 class="section-title">
+                        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></svg>
+                        Inference Parameters
+                    </h2>
+                    
+                    <div class="form-group">
+                        <div class="slider-header">
+                            <label for="conf-threshold">Confidence Threshold</label>
+                            <span id="conf-val">0.25</span>
+                        </div>
+                        <input type="range" id="conf-threshold" min="0.05" max="0.95" step="0.05" value="0.25" class="slider">
+                        <span class="help-text">Minimum confidence for a box to be shown.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="slider-header">
+                            <label for="iou-threshold">IoU Threshold (NMS)</label>
+                            <span id="iou-val">0.45</span>
+                        </div>
+                        <input type="range" id="iou-threshold" min="0.05" max="0.95" step="0.05" value="0.45" class="slider">
+                        <span class="help-text">Intersection over Union cutoff to filter overlaps.</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Panel -->
+            <main class="main-content">
+                <!-- Tabs / Mode Selectors -->
+                <div class="mode-selector card">
+                    <button class="mode-tab active" data-mode="image">
+                        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                        Image Upload
+                    </button>
+                    <button class="mode-tab" data-mode="video">
+                        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                        Video File
+                    </button>
+                    <button class="mode-tab" data-mode="webcam">
+                        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4zM14 13h-3v3H9v-3H6v-2h3V8h2v3h3v2z"/></svg>
+                        Live Camera
+                    </button>
+                </div>
+
+                <!-- Display Workspace -->
+                <div class="workspace card">
+                    <!-- Loading Overlay -->
+                    <div id="inference-loading" class="inference-loading hidden">
+                        <div class="spinner-large"></div>
+                        <p id="inference-loading-text">Processing frame...</p>
+                    </div>
+
+                    <!-- Image Workspace -->
+                    <div id="workspace-image" class="workspace-panel">
+                        <div class="drop-zone" id="image-drop-zone">
+                            <svg viewBox="0 0 24 24" width="48" height="48" class="upload-icon"><path fill="currentColor" d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+                            <h3>Drag & Drop Image Here</h3>
+                            <p>or click to browse local files (JPG, PNG, WEBP)</p>
+                            <input type="file" id="image-file-input" accept="image/*" class="hidden">
+                        </div>
+                    </div>
+
+                    <!-- Video Workspace -->
+                    <div id="workspace-video" class="workspace-panel hidden">
+                        <div class="drop-zone" id="video-drop-zone">
+                            <svg viewBox="0 0 24 24" width="48" height="48" class="upload-icon"><path fill="currentColor" d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                            <h3>Drag & Drop Video Here</h3>
+                            <p>or click to browse local files (MP4, WEBM)</p>
+                            <input type="file" id="video-file-input" accept="video/*" class="hidden">
+                        </div>
+                    </div>
+
+                    <!-- Webcam Workspace -->
+                    <div id="workspace-webcam" class="workspace-panel hidden">
+                        <div class="webcam-placeholder">
+                            <svg viewBox="0 0 24 24" width="48" height="48" class="upload-icon"><path fill="currentColor" d="M12 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm0-7c-5.52 0-10 4.48-10 10s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+                            <h3>Camera Feed</h3>
+                            <p>Grant camera permissions to start real-time detection</p>
+                            <button id="btn-webcam-toggle" class="btn btn-primary mt-4">Start Webcam</button>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Canvas Container (for active visualization) -->
+                    <div id="canvas-container" class="canvas-container hidden">
+                        <canvas id="output-canvas"></canvas>
+                        
+                        <!-- Video Controls (moved here so they appear below the video canvas) -->
+                        <div id="video-controls" class="video-controls hidden">
+                            <button id="btn-video-play" class="btn btn-icon">
+                                <svg viewBox="0 0 24 24" width="20" height="20" id="play-icon"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+                                <svg viewBox="0 0 24 24" width="20" height="20" id="pause-icon" class="hidden"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                            </button>
+                            <div class="progress-bar-wrapper">
+                                <div id="video-progress" class="progress-bar"></div>
+                            </div>
+                            <span id="video-time" class="time-display">00:00 / 00:00</span>
+                        </div>
+                        <!-- HTML overlays for hover classes -->
+                    </div>
+                    
+                    <!-- Actions Bar (Submit & Clear buttons) -->
+                    <div id="workspace-actions" class="workspace-actions hidden">
+                        <button id="btn-submit" class="btn btn-primary">
+                            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                            Submit Scan
+                        </button>
+                        <button id="btn-clear" class="btn btn-secondary btn-danger">
+                            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                            Clear Workspace
+                        </button>
+                    </div>
+
+                    <!-- Elements hidden from view but used for processing -->
+                    <video id="hidden-video" style="position: absolute; top: -9999px; left: -9999px; width: 640px; height: 480px; opacity: 0; pointer-events: none;" playsinline muted></video>
+                </div>
+
+                <!-- Bottom Panel (Results) -->
+                <div class="results-panel card">
+                    <div class="results-header">
+                        <h2 class="section-title">
+                            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm0 8H7v-2h10v2z"/></svg>
+                            Detection Results
+                        </h2>
+                        <div id="inference-time-badge" class="badge badge-info hidden">Inference: 0ms</div>
+                    </div>
+
+                    <div class="results-grid">
+                        <div class="stats-card">
+                            <div class="stats-title">Total Detected</div>
+                            <div class="stats-value" id="stats-total-count">0</div>
+                        </div>
+
+                        <!-- Class summary badges -->
+                        <div class="class-summary" id="class-summary-container">
+                            <div class="no-detections-text">No vehicles detected yet. Upload an image or start the camera feed to begin.</div>
+                        </div>
+                    </div>
+
+                    <!-- Table of details -->
+                    <div class="table-wrapper hidden" id="detections-table-container">
+                        <table class="detections-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Class</th>
+                                    <th>Confidence</th>
+                                    <th>Bounding Box [x1, y1, x2, y2]</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detections-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+</body>
+</html>

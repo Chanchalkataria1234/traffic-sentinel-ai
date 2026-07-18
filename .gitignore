@@ -1,0 +1,26 @@
+# Python virtual environment
+.venv/
+env/
+venv/
+ENV/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE configurations
+.gemini/
+.idea/
+.vscode/
+
+# Local training dataset & models (excluding output model used by docs)
+trafic_data/
+runs/detect/train/
+runs/detect/train2/
+runs/detect/train3/
+runs/detect/train4/
+runs/detect/train5/
+
+# Ignore large raw weights, but keep best weights in runs if needed (we copied ONNX to docs/)
+*.pt
